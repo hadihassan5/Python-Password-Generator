@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Password Generator</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <main class="card">
+        <h1>🔑 Password Generator</h1>
+
+        <label>Length:
+            <input id="length" type="text" value="12" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+        </label>
+
+
+        <div class="options">
+            <label><input id="lower" type="checkbox" checked /> Lowercase (a-z)</label>
+            <label><input id="upper" type="checkbox" checked /> Uppercase (A-Z)</label>
+            <label><input id="digits" type="checkbox" checked /> Digits (0-9)</label>
+            <label><input id="special" type="checkbox" /> Special (!@#...)</label>
+        </div>
+
+        <button id="generateBtn">Generate</button>
+
+        <div id="result" class="result"></div>
+
+        <div class="actions">
+            <button id="copyBtn" disabled>Copy</button>
+        </div>
+
+        <p class="note">Frontend: HTML/CSS/JS • Backend: Python (Flask)</p>
+    </main>
+
+    <script>
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const length = parseInt(document.getElementById('length').value) || 12;
+            const lower = document.getElementById('lower').checked;
+            const upper = document.getElementById('upper').checked;
+            const digits = document.getElementById('digits').checked;
+            const special = document.getElementById('special').checked;
+
+            const payload = { length, lower, upper, digits, special };
+            const res = await fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            const resultDiv = document.getElementById('result');
+
+            if (data.error) {
+                resultDiv.innerText = data.error;
+                resultDiv.classList.add('error');
+                document.getElementById('copyBtn').disabled = true;
+            } else {
+                resultDiv.innerText = "🔒 " + data.password;
+                resultDiv.classList.remove('error');
+                document.getElementById('copyBtn').disabled = false;
+            }
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const txt = document.getElementById('result').innerText.replace(/^🔒\s*/, '');
+            navigator.clipboard.writeText(txt).then(() => {
+                alert('Password copied to clipboard');
+            });
+        });
+    </script>
+</body>
+
+</html>
